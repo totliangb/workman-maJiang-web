@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>room</title>
+</head>
+<body>
+<style>
+	.main{
+		width: 100%;
+		max-height: 100%;
+		height: 600px;
+	}
+	.main-top{
+		max-height: 80%;
+		height: 80%;
+		background-color: red;
+	}
+	.main-left{
+		width: 70%;
+		height: 90%;
+		margin: 1%;
+		float: left;
+		background-color: #FFFFFF;
+	}
+	.main-right{
+		width: 25%;
+		height: 90%;
+		margin: 1%;
+		float: right;
+		background-color: #FFFFFF;
+	}
+	.now-pai{
+		height: 48%;
+		background-color: blue;
+		margin-bottom: 2%;
+	}
+	.msg-area{
+		height: 48%;
+		background-color: green;
+		/*margin-top: 2%;*/
+		font-size: 11px;
+		color: #FFFFFF;
+		padding: 5px;
+	}
+	.my-pai{
+		background-color: #cccccc;
+		height: 80px;
+		text-align: center;
+	}
+	.pai-list{
+	    width: 80%;
+	    margin: 0 auto;
+	    height: 100%;
+	}
+	.paiItem{
+		width: 30px;
+		height: 50px;
+		border: 1px solid red;
+		background-color: #FFFFFF;
+		color: #000000;
+		font-weight: bold;
+		float: left;
+	    margin: 20px 3px;
+	    cursor: pointer
+	}
+	.paiItem:hover{
+		margin-top: 0px;
+	}
+</style>
+<div class="main">
+	<div class="main-top">
+		<div class="main-left">
+			已经打过的牌
+		</div>
+		<div class="main-right">
+			<div class="now-pai">
+				当前出的牌
+			</div>
+			<div class="msg-area">
+				
+			</div>
+		</div>
+	</div>
+	<div class="my-pai">
+		<div class="pai-list">
+			<div class="paiItem">
+				一万
+			</div>
+			<div class="paiItem">
+				一
+			</div>
+			<div class="paiItem">
+				一万
+			</div>
+			<div class="paiItem">
+				一万
+			</div>
+			<div class="paiItem">
+				一万
+			</div>
+			<div class="paiItem">
+				一万
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="http://cdn.bootcss.com/jquery/3.2.1/jquery.js"></script>
+<script>
+
+	function showMsg(msg){
+		var msg_html = "<p>"+msg+"</p>";
+		$(".msg-area").append(msg_html);
+	}	
+
+	function displayPai(pai){
+		var paiHtml = '';
+		$.each(pai,function(i, item){
+			paiHtml += '<div class="paiItem">';
+			paiHtml += item.name;
+			paiHtml += '</div>';
+		});
+		$(".my-pai .pai-list").html(paiHtml);
+	}
+
+	/**
+	 * 与GatewayWorker建立websocket连接，域名和端口改为你实际的域名端口，
+	 * 其中端口为Gateway端口，即start_gateway.php指定的端口。
+	 * start_gateway.php 中需要指定websocket协议，像这样
+	 * $gateway = new Gateway(websocket://0.0.0.0:7272);
+	 */
+	ws = new WebSocket("ws://127.0.0.1:2346");
+	// 服务端主动推送消息时会触发这里的onmessage
+	ws.onmessage = function(e){
+	    // json数据转换成js对象
+	    var data = eval("("+e.data+")");
+	    var type = data.type || '';
+	    switch(type){
+	        // Events.php中返回的init类型的消息，将client_id发给后台进行uid绑定
+	        case 'init':
+	            // 利用jquery发起ajax请求，将client_id发给后端进行uid绑定
+	            $.post('/bind.php', {client_id: data.client_id}, function(data){}, 'json');
+	            break;
+	        case 'show':
+	        	showMsg(data.msg);
+	        	console.log(data.msg);
+	        	break;
+	        case 'pai':
+	        	console.log(12312);
+	        	displayPai(data.paiList);
+	        	console.log(data.paiList);
+	        	break;
+	        default:
+	        	console.log(data);
+	        	break;
+	        // 当mvc框架调用GatewayClient发消息时直接alert出来
+	        // default :
+	        //     console.log(e.data);
+	    }
+	};
+
+	$(".paiItem").click(function(e){
+
+	});
+
+</script>
+</body>
+</html>
